@@ -1,31 +1,22 @@
-import { PrismaClient } from "@prisma/client"
-import { PrismaClient as GeneratedPrismaClient } from "@prisma/client"
-import { PrismaPg } from "@prisma/adapter-pg"
-import { Pool } from "pg"
+import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 
-interface GlobalPrisma {
-  prisma?: GeneratedPrismaClient
-  pool?: Pool
-}
+const globalForPrisma = globalThis as unknown as {
+  prisma?: PrismaClient;
+};
 
-const globalForPrisma = globalThis as unknown as GlobalPrisma
+// 1. Initialize the Postgres adapter with your URL
+const adapter = new PrismaPg({
+  connectionString: process.env.DATABASE_URL as string,
+});
 
-const pool = globalForPrisma.pool ?? new Pool({
-  connectionString: process.env.DATABASE_URL ?? "",
-})
-
-globalForPrisma.pool = pool
-
-const adapter = new PrismaPg(pool)
-
-const prisma = globalForPrisma.prisma ?? new PrismaClient({ 
-  adapter,
-  log: process.env.NODE_ENV === 'development' ? ['query', 'error'] : [],
-})
+// 2. Pass the adapter to the Prisma 7 Client
+export const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({ adapter });
 
 if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma
+  globalForPrisma.prisma = prisma;
 }
 
-export default prisma
-
+export default prisma;
