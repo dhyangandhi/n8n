@@ -1,5 +1,5 @@
 import 'server-only'; // <-- ensure this file cannot be imported from the client
- 
+ 
 import { createTRPCOptionsProxy } from '@trpc/tanstack-react-query';
 import { createTRPCClient, httpLink } from '@trpc/client';
 import { cache } from 'react';
@@ -7,22 +7,23 @@ import { createTRPCContext } from './init';
 import { makeQueryClient } from './query-client';
 import { appRouter } from './routers/_app';
 import type { AppRouter } from './routers/_app';
- 
+ 
 // IMPORTANT: Create a stable getter for the query client that
 //            will return the same client during the same request.
 export const getQueryClient = cache(makeQueryClient);
- 
+ 
 export const trpc = createTRPCOptionsProxy({
   ctx: createTRPCContext,
   router: appRouter,
   queryClient: getQueryClient,
 });
- 
 
-// // If your router is on a separate server, pass a client:
-// createTRPCOptionsProxy<AppRouter>({
-//   client: createTRPCClient<AppRouter>({
-//     links: [httpLink({ url: '...' })],
-//   }),
-//   queryClient: getQueryClient,
-// });
+// 👇 --- WE ADDED THIS NEW EXPORT --- 👇
+
+export const getServerCaller = async () => {
+  // 1. Initialize the context
+  const ctx = await createTRPCContext(); 
+  
+  // 2. Return the direct server-side caller
+  return appRouter.createCaller(ctx);
+};
