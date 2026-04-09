@@ -24,7 +24,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-
+import Image  from "next/image";
 import { Input } from "@/components/ui/input";
 
 
@@ -80,7 +80,7 @@ export function RegisterForm() {
 
   return (
     <div className="flex flex-col gap-6 max-w-md mx-auto">
-      <Card>
+      <Card className="w-full overflow-hidden">
         <CardHeader className="text-center space-y-1">
           <CardTitle>Get started</CardTitle>
           <CardDescription>
@@ -97,9 +97,11 @@ export function RegisterForm() {
               {/* Social Buttons */}
               <div className="flex flex-col gap-3">
                 <Button variant="outline" disabled={isPending}>
+                  <Image alt="Google" src="/logos/google.svg" width={20} height={20} />
                   Continue with Google
                 </Button>
                 <Button variant="outline" disabled={isPending}>
+                  <Image alt="GitHub" src="/logos/github.svg" width={20} height={20} />
                   Continue with GitHub
                 </Button>
               </div>
@@ -166,8 +168,10 @@ export function RegisterForm() {
               {/* Submit */}
               <Button
                 type="submit"
-                disabled={isPending}
-                className="w-full cursor-not-allowed opacity-50"
+                disabled={isPending || !form.formState.isValid} 
+                className={`w-full disabled:opacity-50 ${
+                  isPending ? "cursor-not-allowed" : "cursor-pointer"
+                }`}
               >
                 {isPending ? "Creating..." : "Create Account"}
               </Button>
