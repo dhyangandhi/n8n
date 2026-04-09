@@ -24,7 +24,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-
+import  Image  from "next/image";
 import { Input } from "@/components/ui/input";
 import { authClient } from "@/lib/auth-client";
 
@@ -42,7 +42,7 @@ export function LoginForm() {
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: "",
+      email: "",  
       password: "",
     },
   });
@@ -73,88 +73,113 @@ export function LoginForm() {
 
   const isPending = form.formState.isSubmitting;
 
-  return (
-    <div className="flex flex-col gap-6 max-w-md mx-auto">
-      <Card>
-        <CardHeader className="text-center space-y-1">
-          <CardTitle>Welcome back</CardTitle>
-          <CardDescription>Login to continue</CardDescription>
-        </CardHeader>
+ return (
+  <div className="max-w-sm mx-auto">
+    <Card className="border rounded-xl shadow-sm w-100 overflow-hidden">
 
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
-              <div className="grid gap-6">
+      <CardHeader className="text-center space-y-1">
+        <CardTitle className="text-lg font-semibold">
+          Welcome back
+        </CardTitle>
+        <CardDescription className="text-gray-500">
+          Login to continue
+        </CardDescription>
+      </CardHeader>
 
-                {/* Social buttons */}
-                <div className="flex flex-col gap-4">
-                  <Button variant="outline" className="w-full" disabled={isPending}>
-                    Continue with Google
-                  </Button>
-                  <Button variant="outline" className="w-full" disabled={isPending}>
-                    Continue with GitHub
-                  </Button>
-                </div>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <div className="flex flex-col gap-4">
 
-                {/* Email */}
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Email" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Password */}
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="password"
-                          placeholder="Password"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Submit */}
+              {/* Social buttons */}
+              <div className="flex flex-col gap-3 mb-2">
                 <Button
-                  type="submit"
+                  variant="outline"
+                  className="w-full rounded-lg py-2 flex items-center justify-center gap-2 hover:bg-gray-50"
                   disabled={isPending}
-                  className="w-full"
                 >
-                  {isPending ? "Logging in..." : "Login"}
+                  <Image alt="GitHub" src="/logos/github.svg" width={20} height={20} />
+                  Continue with GitHub
                 </Button>
 
-                {/* Footer */}
-                <div className="text-sm text-muted-foreground text-center">
-                  Don&apos;t have an account?{" "}
-                  <Link
-                    href="/signup"
-                    className="underline underline-offset-4 hover:text-primary font-medium"
-                  >
-                    Sign up
-                  </Link>
-                </div>
-
+                <Button
+                  variant="outline"
+                  className="w-full rounded-lg py-2 flex items-center justify-center gap-2 hover:bg-gray-50"
+                  disabled={isPending}
+                >
+                  <Image alt="Google" src="/logos/google.svg" width={20} height={20} />
+                  Continue with Google
+                </Button>
               </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-    </div>
-  );
+
+              {/* Email */}
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">
+                      Email
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="m@example.com"
+                        className="h-10 rounded-md"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Password */}
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium">
+                      Password
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="••••••••"
+                        className="h-10 rounded-md"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Login */}
+              <Button
+                type="submit"
+                disabled={isPending}
+                className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-md"
+              >
+                {isPending ? "Logging in..." : "Login"}
+              </Button>
+
+              {/* Footer */}
+              <div className="text-sm text-gray-500 text-center mt-2">
+                Don&apos;t have an account?{" "}
+                <Link
+                  href="/signup"
+                  className="underline font-medium hover:text-black"
+                >
+                  Sign up
+                </Link>
+              </div>
+
+            </div>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
+  </div>
+);
 }
