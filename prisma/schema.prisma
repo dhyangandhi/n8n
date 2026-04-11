@@ -73,3 +73,11 @@ model Workflow {
   id   String @id @default(cuid())
   name String
 }
+
+model aiResult   {
+  id        String   @id @default(cuid())
+  prompt    String
+  result    String?
+  status    String   // "pending", "done"
+  createdAt DateTime @default(now())
+}
