@@ -1,27 +1,36 @@
-// src/inngest/functions.ts
 import prisma from "@/lib/db";
 import { inngest } from "./client";
+import { Ollama } from "ollama";
 
-export const processTask = inngest.createFunction(
-  { id: "process-task", triggers: { event: "app/task.created" } },
-  async ({ event, step }) => {
-    const result = await step.run("handle-task", async () => {
-      return { processed: true, id: event.data.id };
-    });
-    
-    await step.sleep("fetching", "5s");
+const ollama = new Ollama({
+  host: "http://192.168.0.144:11434",
+});
 
-    await step.sleep("trancribing", "5s");
-
-    await step.sleep("sending-ai", "5s");
-    
-    
-    await step.run("finalize-task", async () => {
-      return prisma.workflow.create({
-        data: {
-          name: "Workflow-from-inngest",
-        },
-      });
-    });
+export const execute = inngest.createFunction(
+  {
+    id: "execute-ai",
+    triggers: [{ event: "execute/ai" }],
   },
+  async ({ event }: any) => {
+    const { prompt, recordId } = event.data;
+
+    if (!prompt) throw new Error("No prompt");
+
+    const response = await ollama.generate({
+      model: "qwen2.5-coder:latest",
+      prompt,
+    });
+
+    const result = response.response;
+
+    await prisma.aiResult.update({
+      where: { id: recordId },
+      data: {
+        result,
+        status: "done",
+      },
+    });
+
+    return { result };
+  }
 );
