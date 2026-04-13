@@ -2,15 +2,32 @@ import prisma from "@/lib/db";
 import { createTRPCRouter, protectedProcedure } from "../init";
 import { inngest } from "@/inngest/client";
 import { z } from "zod";
-// import { Ollama } from "ollama"; // ✅ correct import
+//import { Ollama } from "ollama"; // ✅ correct import
 
 
 export const appRouter = createTRPCRouter({
-  testAi: protectedProcedure.mutation(async () => {
+
+  testAi: protectedProcedure
+  .input(z.string())
+  .mutation(async ({ input }) => {
+    console.log("REAL ROUTER RUNNING:", input);
+
+    const record = await prisma.aiResult.create({
+      data: {
+        prompt: input,
+        status: "pending",
+      },
+    });
+
     await inngest.send({
       name: "execute/ai",
+      data: {
+        prompt: input,
+        recordId: record.id,
+      },
     });
-    return { success: true, message: "Job queued"}
+
+    return { success: true, id: record.id };
   }),
 
   getWorkflows: protectedProcedure.query(() => {
