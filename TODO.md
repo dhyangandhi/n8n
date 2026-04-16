@@ -1,9 +1,7 @@
-# Task: Fix TypeScript error in workflow.tsx (Property 'data' does not exist)
+# Task Progress: Fix TypeScript errors and bugs in entity-components.tsx
 
-## Pending Steps:
-1. [x] Edit src/features/workflow/hooks/use-workflow.ts: Rename hook to useSuspenseWorkflows ✓
-2. [x] Edit src/features/workflow/components/workflow.tsx: Fix import/const/data access ✓
-3. [x] Verify TypeScript errors are resolved (restart TS server) ✓
-4. [x] Run Biome lint check ✓
-5. Mark complete and attempt_completion.
+## Pending Steps (from approved plan):
+- [ ] Step 1: Apply all fixes via edit_file (TS errors, logic, typos).
+- [ ] Step 2: Verify with Biome lint check.
+- [ ] Step 3: Confirm no remaining errors, attempt_completion.
 
