@@ -1,51 +1,50 @@
-import {  PlugIcon } from "lucide-react";
+import { PlugIcon, SearchIcon } from "lucide-react";
 import { Button } from "./ui/button";
 import Link from "next/link";
-import { ReactNode } from "react";
-
+import { Input } from "./ui/input";
 
 type EntityHeaderProps = {
     title: string;
-    despcription?: string;
+    description?: string;
     newButtonLabel?: string;
     disabled?: boolean;
     isCreating?: boolean;
 } & (
-  | { onNew: () => void; newButtonHerf?: never }
-  | { newButtonHerf: string; onNew?: never }
-  | { onNew?: never; newButtonHerf?: never }
+  | { onNew: () => void; newButtonHref?: never }
+  | { newButtonHref: string; onNew?: never }    
+  | { onNew?: never; newButtonHref?: never }
 );
 
 export const EntityHeader = ({
     title,
-    despcription,
+    description,
     onNew,
-    newButtonHerf,
+    newButtonHref,
     newButtonLabel,
     disabled,
     isCreating,
 }: EntityHeaderProps) => {
     return (
-        <div className="flex flex-raw items-center justify-between gap-x-4">
+        <div className="flex flex-row items-center justify-between gap-x-4">
             <div className="flex flex-col">
-                <h1 className="text-lg md:text-sl font-semibold">{title}</h1>
-                {despcription && (
-                    <p className="text-xs md:text text-muted-foreground">
-                        {despcription}
+                <h1 className="text-lg md:text-xl font-semibold">{title}</h1>
+                {description && (
+                    <p className="text-xs md:text-sm text-muted-foreground">
+                        {description}
                     </p>
                 )}
             </div>
-            {onNew && !newButtonHerf && (
+            {onNew && !newButtonHref && (
                 <Button disabled={isCreating || disabled} size="sm" onClick={onNew}>
-                    <PlugIcon className="size-4" />
+                    <PlugIcon className="size-4 mr-2" />
                     {newButtonLabel}
                 </Button>
             )}
-            {newButtonHerf && !onNew && (
+            {newButtonHref && !onNew && (
                 <Button asChild size="sm">
-                    <Link href={newButtonHerf} prefetch>
-                    <PlugIcon className="size-4" />
-                    {newButtonLabel}
+                    <Link href={newButtonHref} prefetch>
+                        <PlugIcon className="size-4 mr-2" />
+                        {newButtonLabel}
                     </Link>
                 </Button>
             )}
@@ -54,29 +53,93 @@ export const EntityHeader = ({
 };
 
 type EntityContainerProps = {
-    childern: React.ReactNode;
+    children?: React.ReactNode;
     header?: React.ReactNode;
     search?: React.ReactNode;
     pagination?: React.ReactNode;
 }
 
-
 export const EntityContainer = ({
-    childern,
+    children,
     header,
     search,
     pagination,
 }: EntityContainerProps) => {
     return (
-        <div className="p-4 md:px-10 md:py-6 h-full ">
-            <div className="mx-auto max-w-screen-xl w-full flex flex-col gay-y-8 h-full">
+        <div className="p-4 md:px-10 md:py-6 h-full">
+            <div className="mx-auto max-w-screen-xl w-full flex flex-col gap-y-8 h-full">
                 {header}
-            <div className="flex flex-col gap-y-4 h-full ">
-                {childern}
-                {search}
+                <div className="flex flex-col gap-y-4 h-full relative">
+                    {search}
+                    {children}
+                </div>
+                {pagination}
             </div>
-            {pagination}
-        </div>
         </div>
     )
 }
+
+interface EntitySearchProps {
+    value: string;
+    onChange: (value: string) => void;
+    placeholder?: string;
+};
+
+export const EntitySearch = ({
+    value,
+    onChange,
+    placeholder = "Search",
+}: EntitySearchProps) => {
+    return (
+        <div className="absolute right-1 z-10">
+            <SearchIcon className="size-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input 
+                className="max-w-[200px] bg-background shadow-none border-border pl-8" 
+                placeholder={placeholder}
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+            />  
+        </div>
+    )
+};
+
+interface EntityPaginationProps {
+    page: number;
+    totalPages: number;
+    onPageChange: (page: number) => void;
+    disabled?: boolean;
+}
+
+export const EntityPagination = ({
+    page,
+    totalPages,
+    onPageChange,
+    disabled,
+}: EntityPaginationProps) => {
+    return (
+         <div className="flex items-center justify-between gap-x-2 w-full">
+            <div className="flex-1 text-sm text-muted-foreground">
+                Page {page} of {totalPages || 1}
+            </div>
+            <div className="flex items-center justify-end space-x-2 py-4">
+                <Button
+                    disabled={page === 1 || disabled}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onPageChange(Math.max(1, page - 1))}
+                >
+                    Previous                    
+                </Button>
+                <Button
+                    disabled={page === totalPages || totalPages === 0 || disabled}
+                    variant="outline"
+                    size="sm"
+                    // Fixed the math logic here!
+                    onClick={() => onPageChange(Math.min(totalPages, page + 1))} 
+                >
+                    Next
+                </Button>
+            </div>
+        </div>
+    )
+};

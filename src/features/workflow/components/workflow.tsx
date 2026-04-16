@@ -1,9 +1,29 @@
 "use client";
 
-import { EntityContainer, EntityHeader } from "@/components/entity-components";
+import { EntityContainer, EntityHeader, EntityPagination, EntitySearch } from "@/components/entity-components";
 import { useCreateWorkflow, useSuspenseWorkflows } from "../hooks/use-workflow"
 import { useUpgradeModal } from "@/hooks/use-upgrade-model";
 import { useRouter } from "next/navigation";
+import { useWorkflowsParams } from "../hooks/use-workflows-params";
+import { useEntitySearch } from "../hooks/use-entity-search";
+
+export const WorkflowSearch = () => {
+    const [params, setParams] = useWorkflowsParams();
+    const {searchValue, onSearchChange } = useEntitySearch({
+        params,
+        setParams,
+    });
+    return (
+        <EntitySearch
+            value={searchValue}
+            onChange={onSearchChange}
+            placeholder="Search WorkFlows"
+        />
+    );
+};
+
+
+
 export const WorkflowsList = () => {
 
     const workflows = useSuspenseWorkflows();
@@ -11,7 +31,7 @@ export const WorkflowsList = () => {
     return (
         <div className="flex flex-1 justify-center items-center"> 
             <p>
-                {JSON.stringify(workflows[0].data, null, 2)}
+                {JSON.stringify(workflows.data, null, 2)}
             </p>
         </div>
     );
@@ -37,15 +57,29 @@ export const WorkflowsHeader = ({ disabled }: { disabled?: boolean }) =>
         <>
             <EntityHeader 
                 title="Workflows"
-                despcription="Create and manage your workflows"
+                description="Create and manage your workflows"
                 onNew={handleCreate}
                 newButtonLabel="New workflow"
                 disabled={disabled}
                 isCreating={createWorkflow.isPending}
             />
         </>
-    )
-}
+    );
+};
+
+export const WorkflowsPagination = () => {
+    const workflow = useSuspenseWorkflows();
+    const [params, setParma] = useWorkflowsParams();
+    
+    return (
+        <EntityPagination 
+            disabled={workflow.isFetching}
+            totalPages={workflow.data.totalPages}
+            page={workflow.data.page}
+            onPageChange={(page) => setParma({ ...params, page })}
+        />
+    );
+};
 
 export const WorkflowsContainer = ({
     children
@@ -58,9 +92,10 @@ export const WorkflowsContainer = ({
             {modal}
             <EntityContainer
                 header={<WorkflowsHeader />}
-                search={<></>}
-                pagination={<></>}
-                childern={children}
+                search={<WorkflowSearch />}
+                pagination={<WorkflowsPagination />}
+                children={children}
+
             />
         </>
     )
