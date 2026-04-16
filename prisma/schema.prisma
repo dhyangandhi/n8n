@@ -17,7 +17,7 @@ model User {
   updatedAt     DateTime  @updatedAt
   accounts      Account[]
   sessions      Session[]
-
+  workflow      Workflow[]
   @@map("user")
 }
 
@@ -51,7 +51,7 @@ model Account {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  
   @@index([userId])
   @@map("account")
 }
@@ -72,6 +72,11 @@ model Verification {
 model Workflow {
   id   String @id @default(cuid())
   name String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model AiResult   {
@@ -81,3 +86,4 @@ model AiResult   {
   status    String   // "pending", "done"
   createdAt DateTime @default(now())
 }
+

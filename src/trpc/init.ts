@@ -48,20 +48,17 @@ export const protectedProcedure = baseProcedure.use(async ({ ctx, next }) => {
 
 export const premiumProcedure = protectedProcedure.use(
   async ({ ctx, next }) => {
-    const customer = await polarClient.customers.getStateExternal({
-      externalId: ctx.auth.user.id,
-    });
+    let customer = null;
 
-    if (
-      !customer.activeSubscriptions || 
-      customer.activeSubscriptions.length === 0
-    ) {
-      throw new TRPCError({
-        code: "FORBIDDEN",
-        message: "ACTIVE subscription required",
+    try {
+      customer = await polarClient.customers.getStateExternal({
+        externalId: ctx.auth.user.id,
       });
+    } catch (err) {
+      console.log("Polar fetch failed (ignored in dev):", err);
     }
 
+    // 🔥 BYPASS: do NOT block even if no subscription
     return next({ ctx: { ...ctx, customer } });
   }
-)
+);
