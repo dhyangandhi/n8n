@@ -1,16 +1,18 @@
 import { requireAuth } from "@/lib/auth-utils";
 
+// 1. Update the type to reflect that params is a Promise
 interface PageProps {
   params: Promise<{
     workflowId: string;
-  }>
+  }>;
 }
 
-const Page = async ({ params }: PageProps) => {
+export default async function Page({ params }: PageProps) {
   await requireAuth();
-  
-  const { workflowId } = await params;
-  return <p>Workflow id: {workflowId}</p>;
-};
 
-export default Page;
+  // 2. Await the params before using them
+  const Params = await params;
+
+  // 3. Now you can safely display the ID!
+  return <p>Workflow id: {Params.workflowId}</p>;
+}
