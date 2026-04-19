@@ -144,7 +144,7 @@ export const WorkflowItem = ({
     }
     return (
         <EntityItem 
-            href={`/workflow/${data.id}`}
+            href={`/workflows/${data.id}`}
             title={data.name}
             subtitle={
                 <>

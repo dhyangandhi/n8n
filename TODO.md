@@ -1,7 +1,1 @@
-# Task Progress: Fix TypeScript errors and bugs in entity-components.tsx
-
-## Pending Steps (from approved plan):
-- [ ] Step 1: Apply all fixes via edit_file (TS errors, logic, typos).
-- [ ] Step 2: Verify with Biome lint check.
-- [ ] Step 3: Confirm no remaining errors, attempt_completion.
-
+# TODO: Fix TypeScript Error in workflows/[workflowId]/page.tsx\n\n- [ ] Step 1: Check if react-error-boundary is installed\n- [ ] Step 2: Edit the import and file to use react-error-boundary\n- [ ] Step 3: Verify fix and complete\n
