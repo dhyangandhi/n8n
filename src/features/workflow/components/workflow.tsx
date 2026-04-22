@@ -162,4 +162,4 @@ export const WorkflowItem = ({
             isRemoving={removeWorkflow.isPending}
         />
     )
-}   
+}

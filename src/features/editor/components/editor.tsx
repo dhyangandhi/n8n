@@ -23,9 +23,9 @@ const initialEdges = [{ id: 'n1-n2', source: 'n1', target: 'n2' }];
 
 export const Editor = ({ workflowId }: {workflowId: string}) => {
     const { data: workflow } = useSuspenseWorkflow(workflowId);
-    const [nodes, setNodes] = useState<Node[]>(workflow.nodes );
+    const [nodes, setNodes] = useState<Node[]>(workflow.nodes);
     const [edges, setEdge] = useState<Edge[]>(workflow.edges);
-
+    
      
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => setNodes((nodesSnapshot) => applyNodeChanges(changes, nodesSnapshot)),
@@ -48,8 +48,8 @@ export const Editor = ({ workflowId }: {workflowId: string}) => {
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
-                fitView
                 nodeTypes={nodeCompontes}
+                fitView
             >
                 <Background />
                 <Controls />
