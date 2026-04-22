@@ -1,1 +1,11 @@
-# TODO: Fix TypeScript Error in workflows/[workflowId]/page.tsx\n\n- [ ] Step 1: Check if react-error-boundary is installed\n- [ ] Step 2: Edit the import and file to use react-error-boundary\n- [ ] Step 3: Verify fix and complete\n
+# TODO - Fix MANUAL_TRIGGER TypeScript error in node-selector.tsx
+
+## Steps:
+1. [x] Create `src/components/manual-trigger.tsx` component similar to initial-node.tsx.
+2. [x] Update `src/config/node-components.ts` to import ManualTriggerNode and add `[NodeType.MANUAL_TRIGGER]: ManualTriggerNode` to nodeCompontes.
+3. Update `src/components/node-selector.tsx` to add `MANUAL_TRIGGER: "MANUAL_TRIGGER"` to the object `{ INITIAL: "INITIAL"; }` at line ~28.
+4. Run `npx prisma generate` (if schema changes, none expected).
+5. Verify no TypeScript errors (VSCode should clear).
+6. Test functionality: select manual trigger node.
+
+Mark completed steps as done and attempt_completion when all finished.

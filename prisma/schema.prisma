@@ -90,6 +90,8 @@ model AiResult   {
 
 enum NodeType {
   INITIAL
+  MANUAL_TRIGGER
+  HTTP_REQUEST
 }
 model Node {
   id   String @id @default(cuid())
