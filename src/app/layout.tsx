@@ -1,10 +1,11 @@
-import { NuqsAdapter } from 'nuqs/adapters/next/app'
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { TRPCReactProvider } from "@/trpc/client";
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import { Toaster } from "sonner";
+import { Provider } from 'jotai';
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const geistSans = Geist({
@@ -35,7 +36,10 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <TRPCReactProvider>
           <NuqsAdapter>
-            {children}
+            <Provider>
+                {children}
+              <Toaster />
+            </Provider>
             <Toaster />
           </NuqsAdapter>
         </TRPCReactProvider>

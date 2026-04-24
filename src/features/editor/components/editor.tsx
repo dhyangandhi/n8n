@@ -7,6 +7,8 @@ import { useState, useCallback } from 'react';
 import '@xyflow/react/dist/style.css';
 import { nodeCompontes } from "@/config/node-components";
 import { AddNoteButton } from "./add-node-button";
+import { useAtom, useSetAtom } from "jotai";
+import { editorAtom } from "../store/atoms";
 export const EditorLoading = () => {
     return <LoadingView message="Loading editor..." />
 };
@@ -23,6 +25,7 @@ const initialEdges = [{ id: 'n1-n2', source: 'n1', target: 'n2' }];
 
 export const Editor = ({ workflowId }: {workflowId: string}) => {
     const { data: workflow } = useSuspenseWorkflow(workflowId);
+    const setEditor = useSetAtom(editorAtom);
     const [nodes, setNodes] = useState<Node[]>(workflow.nodes);
     const [edges, setEdge] = useState<Edge[]>(workflow.edges);
     
@@ -49,7 +52,10 @@ export const Editor = ({ workflowId }: {workflowId: string}) => {
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
                 nodeTypes={nodeCompontes}
+                onInit={setEditor}
                 fitView
+                panOnDrag={false}
+                selectionOnDrag
             >
                 <Background />
                 <Controls />
@@ -60,4 +66,4 @@ export const Editor = ({ workflowId }: {workflowId: string}) => {
             </ReactFlow>
         </div>
     );
-};
+};  
