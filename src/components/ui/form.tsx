@@ -1,12 +1,30 @@
 "use client"
 
 import * as React from "react"
-import { Controller, FormProvider, useFormContext } from "react-hook-form"
+import {
+  Controller,
+  FormProvider,
+  useFormContext,
+  type ControllerProps,
+  type FieldValues,
+  type Path,
+} from "react-hook-form"
+
 import { cn } from "@/lib/utils"
 
 const Form = FormProvider
 
-const FormField = Controller
+type FormFieldProps<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends Path<TFieldValues> = Path<TFieldValues>
+> = ControllerProps<TFieldValues, TName>
+
+function FormField<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends Path<TFieldValues> = Path<TFieldValues>
+>(props: FormFieldProps<TFieldValues, TName>) {
+  return <Controller {...props} />
+}
 
 const FormItem = React.forwardRef<
   HTMLDivElement,
@@ -22,7 +40,7 @@ const FormLabel = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <label
     ref={ref}
-    className={cn("text-sm font-medium", className)}
+    className={cn("text-sm font-medium leading-none", className)}
     {...props}
   />
 ))
@@ -31,19 +49,41 @@ FormLabel.displayName = "FormLabel"
 const FormControl = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
->((props, ref) => <div ref={ref} {...props} />)
+>(({ className, ...props }, ref) => (
+  <div ref={ref} className={cn(className)} {...props} />
+))
 FormControl.displayName = "FormControl"
 
-const FormMessage = React.forwardRef<
+const FormDescription = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-sm text-red-500", className)}
+    className={cn("text-sm text-muted-foreground", className)}
     {...props}
   />
 ))
+FormDescription.displayName = "FormDescription"
+
+const FormMessage = React.forwardRef<
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLParagraphElement>
+>(({ className, ...props }, ref) => {
+  const methods = useFormContext()
+  const errors = methods?.formState?.errors
+
+  return (
+    <p
+      ref={ref}
+      className={cn("text-sm font-medium text-red-500", className)}
+      {...props}
+    >
+      {props.children}
+      {!props.children && errors ? null : null}
+    </p>
+  )
+})
 FormMessage.displayName = "FormMessage"
 
 export {
@@ -52,5 +92,6 @@ export {
   FormItem,
   FormLabel,
   FormControl,
+  FormDescription,
   FormMessage,
 }
