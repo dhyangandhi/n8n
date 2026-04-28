@@ -3,8 +3,8 @@ import { requireAuth } from "@/lib/auth-utils";
 import { HydrateClient } from "@/trpc/server";
 import { ErrorBoundary } from "react-error-boundary";
 import { Suspense } from "react";
-import { Editor, EditorError, EditorLoading } from "@/features/editor/components/editor";
-import { EditorHeader } from "@/features/editor/components/editor-header";
+import { EditorError, EditorLoading } from "@/features/editor/components/editor";
+import { WorkflowEditor } from "@/features/editor/components/workflow-editor";
 
 // 1. Update the type to reflect that params is a Promise
 interface PageProps {
@@ -23,10 +23,7 @@ const Page = async ({ params }: PageProps) => {
     <HydrateClient>
       <ErrorBoundary fallback={<EditorError />}>
         <Suspense fallback={<EditorLoading />}>
-          <EditorHeader workflowId={workflowId} />
-          <main className="flex-1">
-            <Editor workflowId={workflowId} />
-          </main>
+          <WorkflowEditor workflowId={workflowId} />
         </Suspense>
       </ErrorBoundary>            
     </HydrateClient>

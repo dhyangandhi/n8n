@@ -1,53 +1,46 @@
-import prisma from "@/lib/db";
+import { NonRetriableError } from "inngest";
 import { inngest } from "./client";
-import { Ollama } from "ollama";
-import * as Sentry from "@sentry/nextjs"; // ✅ Import Sentry
+import prisma from "@/lib/db";
+import { topologicalSorl } from "./utils";
+import { NodeType } from "@prisma/client";
+import { getExecutor } from "@/features/exections/lib/execute-registry";
 
-const ollama = new Ollama({
-  host: "http://192.168.0.144:11434",
-});
-
-export const execute = inngest.createFunction(
+export const executeWorkflow = inngest.createFunction(
   {
-    id: "execute-ai",
-    triggers: [{ event: "execute/ai" }],
+    id: "execute-workflow",
+    triggers: [{ event: "workflows/execute.workflow" }],
   },
   async ({ event, step }) => {
-    const { prompt, recordId } = event.data;
+    console.log("FUNCTION STARTED:", event.data);
 
-    if (!prompt) throw new Error("No prompt");
+    const workflowId = event.data.workflowId;
 
-    // 1. Ask Ollama (Wrapped in Sentry!)
-    const result = await step.run("generate-ai-response", async () => {
-      
-      // ✅ Wrap the AI call so Sentry tracks it as an LLM operation
-      return await Sentry.startSpan(
-        {
-          name: "Ollama Qwen2.5 Generate",
-          op: "ai.pipeline.step", // This tells Sentry it's an AI task
+    if (!workflowId) {
+      throw new NonRetriableError("Workflow ID is missing");
+    }
+
+    const sortedNodes = await step.run("prepare-workflow", async () => {
+      const workflow = await prisma.workflow.findUniqueOrThrow({
+        where: {
+          id: workflowId,
         },
-        async () => {
-          const response = await ollama.generate({
-            model: "qwen2.5-coder:latest",
-            prompt,
-          });
-          return response.response;
-        }
-      );
-
-    });
-
-    // 2. Save to Database
-    await step.run("update-database", async () => {
-      await prisma.aiResult.update({
-        where: { id: recordId },
-        data: {
-          result,
-          status: "done",
+        include: {
+          nodes: true,
+          connections: true,
         },
       });
+      return topologicalSorl (workflow.nodes, workflow.connections);
     });
-
-    return { result };
-  }
+    let context = event.data.initialData || {};
+    for (const node of sortedNodes ) {
+      const exectuor = getExecutor(node.type as NodeType);
+      context = await exectuor({
+        data: node.data as Record<string, unknown>,
+        nodeId: node.id,
+        context,
+        step,
+      });
+    }
+    return { workflowId, result: context, };
+  },
 );
