@@ -5,7 +5,30 @@ import { generateSlug } from "random-word-slugs";
 import z from "zod";
 import { NodeType } from "@prisma/client";
 import { Edge, Node, useEdges } from "@xyflow/react";
+import { inngest } from "@/inngest/client";
 
+    export const workflowRouter = createTRPCRouter({
+        triggers: protectedProcedure
+        .input(z.object({ id: z.string() }))
+        .mutation(async ({ input, ctx }) => {
+        console.log("BUTTON CLICKED -> MUTATION HIT");
+
+        const workflow = await prisma.workflow.findUniqueOrThrow({
+        where: {
+            id: input.id,
+            userId: ctx.auth.user.id,
+        },
+        });
+
+        const result = await inngest.send({
+        name: "workflows/execute.workflow",
+        data: {
+            workflowId: input.id,
+        },
+    });
+    console.log("EVENT SENT:", result);
+    return workflow;
+  }),
     create: premiumProcedure.mutation(({ ctx }) => {
         return prisma.workflow.create({
             data: {
