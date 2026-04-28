@@ -5,7 +5,7 @@ import { generateSlug } from "random-word-slugs";
 import z from "zod";
 import { NodeType } from "@prisma/client";
 import { Edge, Node, useEdges } from "@xyflow/react";
-export const workflowRouter = createTRPCRouter({
+
     create: premiumProcedure.mutation(({ ctx }) => {
         return prisma.workflow.create({
             data: {
@@ -123,7 +123,7 @@ export const workflowRouter = createTRPCRouter({
                 id: connection.id,
                 source: connection.fromNodeId, // Changed to fromNodeId
                 target: connection.toNodeId,
-                sourceHandle: connection.fromOuput,
+                sourceHandle: connection.fromOutput,
                 targetHandle: connection.toInput,
             }));
             
