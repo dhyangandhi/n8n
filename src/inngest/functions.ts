@@ -3,7 +3,7 @@ import { inngest } from "./client";
 import prisma from "@/lib/db";
 import { topologicalSorl } from "./utils";
 import { NodeType } from "@prisma/client";
-import { getExecutor } from "@/features/exections/lib/execute-registry";
+import { getExecutor } from "@/features/executions/lib/execute-registry";
 
 export const executeWorkflow = inngest.createFunction(
   {
