@@ -1,9 +1,9 @@
 import { NonRetriableError } from "inngest";
 import { inngest } from "./client";
 import prisma from "@/lib/db";
-import { topologicalSorl } from "./utils";
 import { NodeType } from "@prisma/client";
 import { getExecutor } from "@/features/executions/lib/execute-registry";
+import { topologicalSorl } from "./utils";
 
 export const executeWorkflow = inngest.createFunction(
   {
@@ -19,28 +19,49 @@ export const executeWorkflow = inngest.createFunction(
       throw new NonRetriableError("Workflow ID is missing");
     }
 
-    const sortedNodes = await step.run("prepare-workflow", async () => {
-      const workflow = await prisma.workflow.findUniqueOrThrow({
-        where: {
-          id: workflowId,
-        },
-        include: {
-          nodes: true,
-          connections: true,
-        },
-      });
-      return topologicalSorl (workflow.nodes, workflow.connections);
-    });
-    let context = event.data.initialData || {};
-    for (const node of sortedNodes ) {
-      const exectuor = getExecutor(node.type as NodeType);
-      context = await exectuor({
+    const sortedNodes = await step.run(
+      "prepare-workflow",
+      async () => {
+        const workflow =
+          await prisma.workflow.findUniqueOrThrow({
+            where: {
+              id: workflowId,
+            },
+            include: {
+              nodes: true,
+              connections: true,
+            },
+          });
+
+        return topologicalSorl(
+          workflow.nodes,
+          workflow.connections
+        );
+      }
+    );
+
+    let context =
+      (event.data.initialData as Record<
+        string,
+        unknown
+      >) || {};
+
+    for (const node of sortedNodes) {
+      const executor = getExecutor(
+        node.type as NodeType
+      );
+
+      context = await executor({
         data: node.data as Record<string, unknown>,
         nodeId: node.id,
         context,
         step,
       });
     }
-    return { workflowId, result: context, };
-  },
+
+    return {
+      workflowId,
+      result: context,
+    };
+  }
 );
