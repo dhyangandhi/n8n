@@ -1,12 +1,15 @@
 "use client";
 
+import { useEffect, useMemo, useState, useCallback } from "react";
+import { io, Socket } from "socket.io-client";
+
 import { EditorHeader } from "./editor-header";
 import { Editor } from "./editor";
 import {
   useSuspenseWorkflow,
   useUpdateWorkflow,
 } from "@/features/workflow/hooks/use-workflow";
-import { useState, useCallback, useMemo } from "react";
+
 import {
   type Edge,
   type Node,
@@ -17,6 +20,7 @@ import {
   applyEdgeChanges,
   addEdge,
 } from "@xyflow/react";
+
 import { NodeType } from "@prisma/client";
 
 export const WorkflowEditor = ({
@@ -27,8 +31,51 @@ export const WorkflowEditor = ({
   const { data: workflow } = useSuspenseWorkflow(workflowId);
   const updateWorkflow = useUpdateWorkflow();
 
-  const [nodes, setNodes] = useState<Node[]>(workflow.nodes);
+  // ✅ FIX 1: initialize nodes with status
+  const [nodes, setNodes] = useState<Node[]>(
+    workflow.nodes.map((node) => ({
+      ...node,
+      data: {
+        ...node.data,
+        status: "idle",
+      },
+    }))
+  );
+
   const [edges, setEdges] = useState<Edge[]>(workflow.edges);
+
+  // ✅ FIX 2: create socket INSIDE component
+  const socket: Socket = useMemo(
+    () => io("http://localhost:3000"),
+    []
+  );
+
+  // ✅ FIX 3: listen for realtime updates
+  useEffect(() => {
+    socket.on("workflow:update", (msg: any) => {
+      console.log("🔥 FRONTEND RECEIVED:", msg);
+
+      const { nodeId, data } = msg;
+
+      setNodes((prevNodes) =>
+        prevNodes.map((node) =>
+          node.id === nodeId
+            ? {
+                ...node,
+                data: {
+                  ...node.data,
+                  status: data.status,
+                },
+              }
+            : node
+        )
+      );
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [socket]);
 
   const onNodesChange = useCallback(
     (changes: NodeChange[]) =>
@@ -57,7 +104,9 @@ export const WorkflowEditor = ({
   };
 
   const hasManualTrigger = useMemo(() => {
-    return nodes.some((node) => node.type === NodeType.MANUAL_TRIGGER);
+    return nodes.some(
+      (node) => node.type === NodeType.MANUAL_TRIGGER
+    );
   }, [nodes]);
 
   return (

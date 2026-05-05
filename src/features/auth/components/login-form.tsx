@@ -98,7 +98,7 @@ export function LoginForm() {
                   className="w-full rounded-lg py-2 flex items-center justify-center gap-2 hover:bg-gray-50"
                   disabled={isPending}
                 >
-                  <Image alt="GitHub" src="/logos/github.svg" width={20} height={20} />
+                  <Image alt="GitHub" src="/logos/icons8-github.svg" width={20} height={20} />
                   Continue with GitHub
                 </Button>
 
@@ -107,7 +107,7 @@ export function LoginForm() {
                   className="w-full rounded-lg py-2 flex items-center justify-center gap-2 hover:bg-gray-50"
                   disabled={isPending}
                 >
-                  <Image alt="Google" src="/logos/google.svg" width={20} height={20} />
+                  <Image alt="Google" src="/logos/icons8-google.svg" width={20} height={20} />
                   Continue with Google
                 </Button>
               </div>

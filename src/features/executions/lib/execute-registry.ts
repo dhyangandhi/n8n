@@ -4,7 +4,7 @@ import { manualTriggerExecutor } from "@/features/triggers/components/manual-tri
 import { httpRequestExecutor } from "../components/http-request/executor";
 
 export const executorRegistry: Record<NodeType, NodeExecutor> = {
-    [NodeType.HTTP_REQUEST]: httpRequestExecutor,
+    [NodeType.HTTP_REQUEST]: httpRequestExecutor, // todo - this is temporary until we have a better way to handle executors that require channels
     [NodeType.INITIAL]: manualTriggerExecutor,
     [NodeType.MANUAL_TRIGGER]: manualTriggerExecutor,
 };

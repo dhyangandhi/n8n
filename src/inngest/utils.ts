@@ -1,7 +1,7 @@
 import { Connection, Node } from "@prisma/client";
 import topsort from "topsort";
 
-export const topologicalSorl = (
+export const topologicalSort = (
     nodes: Node[],
     connections: Connection[],
 ): Node[] => {
