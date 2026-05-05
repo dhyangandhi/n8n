@@ -1,0 +1,1 @@
+# TODO: Fix TypeScript error in Inngest client\n\n## Steps:\n1. [ ] Edit `src/inngest/client.ts` to remove incompatible `middleware: [realtimeMiddleware()]`\n2. [ ] Run Biome lint/format\n3. [ ] Verify no new TS errors\n4. [ ] Test Inngest dev server\n5. [ ] (Optional) Add realtime to serve config if needed\n\n**Current progress: Starting edits.**

@@ -26,7 +26,6 @@ export const SpinnerLoadingIndicator = ({
       <div className="bg-background/50 absolute inset-0 z-50 rounded-[9px] backdrop-blur-xs" />
       <div className="absolute inset-0 z-50">
         <span className="absolute top-[calc(50%-1.25rem)] left-[calc(50%-1.25rem)] inline-block h-10 w-10 animate-ping rounded-full bg-blue-700/20" />
-
         <LoaderCircle className="absolute top-[calc(50%-0.75rem)] left-[calc(50%-0.75rem)] size-6 animate-spin text-blue-700" />
       </div>
     </div>

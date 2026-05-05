@@ -11,6 +11,9 @@ import { memo, useState } from "react";
 
 import { BaseExecutionNode } from "../base-exection-node";
 import { HTTPRequestFormValues, HTTPRequestDialog } from "./dialog";
+import { useNodeStatus } from "../../hooks/use-node-status";
+import { HTTP_REQUEST_CHANNEL_Name } from "@/inngest/channels/http-request";
+import { fetchHttpRequestRealtimeToken } from "./actions";
 
 type HttpRequestNodeData = {
   variabelName?: string;
@@ -26,10 +29,16 @@ export const HttpRequestNode = memo(
     const [dialogOpen, setDialogOpen] = useState(false);
     const { setNodes } = useReactFlow();
     const nodeData = props.data;
+    const nodeStatus = useNodeStatus({
+      nodeId: props.id,
+      channel: HTTP_REQUEST_CHANNEL_Name,
+      topic: "status",
+      refreshToken: fetchHttpRequestRealtimeToken,
+    });
+
     const handleOpenSettings = () => {
       setDialogOpen(true);
     };
-
     const handleSubmit = (values: HTTPRequestFormValues) => {
       setNodes((nodes) =>
         nodes.map((node) => {
@@ -53,7 +62,6 @@ export const HttpRequestNode = memo(
       ? `${nodeData.method || "GET"}: ${nodeData.endpoint}`
       : "Not Configured";
 
-    const nodeStatus = "initial";
 
     return (
       <>
