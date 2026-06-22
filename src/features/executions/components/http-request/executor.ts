@@ -1,14 +1,13 @@
+import "server-only";
 import type { NodeExecutor } from "@/features/executions/types";
 import { NonRetriableError } from "inngest";
 import ky, { type Options as KyOptions } from "ky";
-import Handlebars from "handlebars";
-import { httpRequestChannel } from "@/inngest/channels/http-request";
+import * as Handlebars from "handlebars";
 
 Handlebars.registerHelper("json", (context) => {
-  const jsonString = JSON.stringify(context, null, 2);
-  const safeString = new Handlebars.SafeString(jsonString);
-
-  return safeString;
+  return new Handlebars.SafeString(
+    JSON.stringify(context, null, 2)
+  );
 });
 
 type HTTPRequestData = {
@@ -18,118 +17,162 @@ type HTTPRequestData = {
   body?: string;
 };
 
-export const httpRequestExecutor: NodeExecutor<HTTPRequestData> = async ({
+export const httpRequestExecutor: NodeExecutor<
+  HTTPRequestData
+> = async ({
   data,
   nodeId,
   context,
   step,
-  publish,
 }) => {
-  // Fix 1: Access the topic as a property rather than calling the channel as a function
-  await publish({
-    channel: httpRequestChannel.name,
-    topic: "node", // Emitting to the "node" topic you defined
-    data: {
-      nodeId,
-      status: "loading",
-    },
-  });
 
   if (!data.endpoint) {
-    await publish({
-      channel: httpRequestChannel.name,
-      topic: "node",
-      data: {
-        nodeId,
-        status: "error",
-      },
-    });
-    throw new NonRetriableError("HTTP Request node: No endpoint configured");
+    throw new NonRetriableError(
+      "HTTP Request node: No endpoint configured"
+    );
   }
 
   if (!data.variableName) {
-    await publish({
-      channel: httpRequestChannel.name,
-      topic: "node",
-      data: {
-        nodeId,
-        status: "error",
-      },
-    });
-    throw new NonRetriableError("Variable name not configured");
+    throw new NonRetriableError(
+      "Variable name not configured"
+    );
   }
 
   if (!data.method) {
-    await publish({
-      channel: httpRequestChannel.name,
-      topic: "node",
-      data: {
-        nodeId,
-        status: "error",
-      },
-    });
-    throw new NonRetriableError("Method not configured");
+    throw new NonRetriableError(
+      "Method not configured"
+    );
   }
-  try {
-  const result = await step.run("http_request", async () => {
-    const method = data.method;
-    const endpoint = Handlebars.compile(data.endpoint)(context);
-    console.log("ENDPOINT", { endpoint });
-    
-    const options: KyOptions = {
-      method,
-    };
 
-    if (["POST", "PUT", "PATCH"].includes(method)) {
-      const resolved = Handlebars.compile(data.body || "{}")(context);
-      JSON.parse(resolved); // This will safely throw within the step if JSON is invalid
-      options.body = resolved;
-      options.headers = {
-        "Content-Type": "application/json",
-      };
+  try {
+
+    const result = await step.run(
+      `http_request_${nodeId}`,
+
+      async () => {
+
+        const endpoint = Handlebars
+          .compile(data.endpoint)(context);
+
+        console.log(
+          "HTTP ENDPOINT:",
+          endpoint
+        );
+
+        const options: KyOptions = {
+
+          method: data.method,
+
+          timeout: 30000,
+
+          retry: {
+            limit: 1,
+          },
+
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+        };
+
+        if (
+          ["POST", "PUT", "PATCH"]
+            .includes(data.method)
+        ) {
+
+          const resolvedBody =
+            Handlebars.compile(
+              data.body || "{}"
+            )(context);
+
+          try {
+
+            options.json =
+              JSON.parse(resolvedBody);
+
+          } catch {
+
+            throw new NonRetriableError(
+              "Invalid JSON body"
+            );
+          }
+        }
+
+        console.log(
+          "HTTP REQUEST:",
+          data.method,
+          endpoint
+        );
+
+        const response = await ky(
+          endpoint,
+          options
+        );
+
+        console.log(
+          "HTTP RESPONSE:",
+          response.status,
+          response.statusText
+        );
+
+        const contentType =
+          response.headers.get(
+            "content-type"
+          ) || "";
+
+        let responseData: unknown;
+
+        try {
+
+          responseData =
+            contentType.includes(
+              "application/json"
+            )
+              ? await response.json()
+              : await response.text();
+
+        } catch {
+
+          responseData =
+            "Failed to parse response";
+        }
+
+        return {
+          ...context,
+
+          [data.variableName]: {
+            httpRequest: {
+
+              status: response.status,
+
+              statusText:
+                response.statusText,
+
+              data: responseData,
+            },
+          },
+        };
+      }
+    );
+
+    return result;
+
+  } catch (error) {
+
+    console.error(
+      "HTTP REQUEST EXECUTOR ERROR:",
+      error
+    );
+
+    if (error instanceof Error) {
+
+      throw new NonRetriableError(
+        error.message
+      );
     }
 
-    const response = await ky(endpoint, options);
-
-    const contentType = response.headers.get("content-type");
-
-    const responseData = contentType?.includes("application/json")
-      ? await response.json()
-      : await response.text();
-      
-    const responsePayload = {
-      httpRequest: {
-        status: response.status,
-        statusText: response.statusText,
-        data: responseData,
-      },
-    };
-
-    return {
-      ...context,
-      [data.variableName]: responsePayload,
-    };
-  });
-
-  await publish({
-    channel: httpRequestChannel.name,
-    topic: "node",
-    data: {
-      nodeId,
-      status: "success",
-    },
-  });
-
-  return result;
-} catch (error) {
-  await publish({
-    channel: httpRequestChannel.name,
-    topic: "node",
-    data: {
-      nodeId,
-      status: "error",
-    },
-  });
-  throw error; // Re-throw the error to ensure the workflow step is marked as failed
-}
+    throw new NonRetriableError(
+      "Unknown HTTP request error"
+    );
+  }
 };

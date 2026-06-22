@@ -45,6 +45,12 @@ const executionNodes: NodeTypeOption[] = [
         desciption: "Make an HTTP requset",
         icon: GlobeIcon,
     },
+    {
+        type: NodeType.OLLAMA,
+        label: "Ollama",
+        desciption: "Make an HTTP requset",
+        icon: "/logos/ollama.svg",
+    },
 ];
 
 interface NodeSelectorProps {
