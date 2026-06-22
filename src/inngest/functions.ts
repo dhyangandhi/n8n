@@ -1,67 +1,98 @@
-  import { NonRetriableError } from "inngest";
+import { NonRetriableError } from "inngest";
 import { inngest } from "./client";
+
 import prisma from "@/lib/db";
+
 import { NodeType } from "@prisma/client";
+
 import { getExecutor } from "@/features/executions/lib/execute-registry";
 import { topologicalSort } from "./utils";
+
 import { manualTriggerChannel } from "./channels/manual-trigger";
 import { httpRequestChannel } from "./channels/http-request";
+import { ollamaChannel } from "./channels/ollama";
 
-  export const executeWorkflow = inngest.createFunction(
-    { id: "execute-workflow", retries: 0, triggers: [{ event: "workflows/execute.workflow" }]},
-    async ({ event, step }) => {
-      console.log("🚀 FUNCTION STARTED:", event.data);
+console.log("✅ INNGEST FUNCTIONS LOADED");
 
-      const data = event.data as {
-        workflowId: string;
-        initialData?: Record<string, unknown>;
-      };
+export const executeWorkflow = inngest.createFunction(
+  {
+    id: "execute-workflow",
+    retries: 0,
+    triggers: [
+      {
+        event: "workflow.execution",
+        channels: [
+          httpRequestChannel(),
+          manualTriggerChannel(),
+          ollamaChannel(),
+        ],
+      },
+    ],
+  },
+  async ({ event, step }) => {
+    console.log("🚀 FUNCTION STARTED:", event.data);
 
-      const workflowId = data.workflowId;
+    const data = event.data as {
+      workflowId: string;
+      initialData?: Record<string, unknown>;
+    };
 
-      if (!workflowId) {
-        throw new NonRetriableError("Workflow ID is missing");
+    const workflowId = data.workflowId;
+
+    if (!workflowId) {
+      throw new NonRetriableError("Workflow ID is missing");
+    }
+
+    const sortedNodes = await step.run(
+      "prepare-workflow",
+      async () => {
+        console.log("📦 FETCHING WORKFLOW:", workflowId);
+
+        const workflow = await prisma.workflow.findUniqueOrThrow({
+          where: {
+            id: workflowId,
+          },
+          include: {
+            nodes: true,
+            connections: true,
+          },
+        });
+
+        console.log("✅ WORKFLOW LOADED");
+
+        const sorted = topologicalSort(
+          workflow.nodes,
+          workflow.connections
+        );
+
+        console.log("📊 SORTED NODES:", sorted.length);
+
+        return sorted;
+      }
+    );
+
+    let context = data.initialData || {};
+
+    for (const node of sortedNodes) {
+      console.log(`➡️ EXECUTING NODE: ${node.id} (${node.type})`);
+
+      const executor = getExecutor(node.type as NodeType);
+
+      if (!executor) {
+        throw new NonRetriableError(
+          `No executor found for node type: ${node.type}`
+        );
       }
 
-      const sortedNodes = await step.run(
-        "prepare-workflow",
-        async () => {
-          const workflow = await prisma.workflow.findUniqueOrThrow({
-            where: { id: workflowId },
-            include: {
-              nodes: true,
-              connections: true,
-            },
-          });
-
-          return topologicalSort(
-            workflow.nodes,
-            workflow.connections
-          );
-        }
-      );
-
-      let context = data.initialData || {};
-
-      for (const node of sortedNodes) {
-        console.log(`➡️ Executing node: ${node.id} (${node.type})`);
-
-        const executor = getExecutor(node.type as NodeType);
-
-        if (!executor) {
-          throw new NonRetriableError(
-            `No executor found for node type: ${node.type}`
-          );
-        }
-
+      try {
+        // FIX: Added 'as any' to bypass the strict object literal checking 
+        // until 'publish' is added to the NodeExecutorParams type definition.
         context = await executor({
           data: node.data as Record<string, unknown>,
           nodeId: node.id,
           context,
           step,
-
-          // ✅ FIXED PUBLISH (this is what makes event visible in Inngest)
-          publish: async (msg) => {
+          publish: async (msg: any) => {
             console.log("🔥 PUBLISH CALLED");
 
             const safeMsg =
@@ -86,12 +117,20 @@ import { httpRequestChannel } from "./channels/http-request";
 
             console.log(`[NODE ${node.id}]`, safeMsg);
           },
-        });
-      }
+        } as any);
 
-      return {
-        workflowId,
-        result: context,
-      };
+        console.log(`✅ NODE COMPLETED: ${node.id}`);
+      } catch (error) {
+        console.error(`❌ NODE FAILED: ${node.id}`, error);
+        throw error;
+      }
     }
-  );
+
+    console.log("🎉 WORKFLOW COMPLETED");
+
+    return {
+      workflowId,
+      result: context,
+    };
+  }
+);

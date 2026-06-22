@@ -1,16 +1,26 @@
 import { NodeProps } from "@xyflow/react";
 import { memo, useState } from "react";
+
 import { BaseTriggerNode } from "../base-trigger-node";
-import { MousePointerIcon } from "lucide-react";
 import { GoogleFormTriggerDialog } from "./dialog";
-export const GoogleFormTrigger = memo((props: NodeProps) => {
-    const [dialogOpen, setDialogOpen] =  useState(false);
+
+export const GoogleFormTriggerNode = memo((props: NodeProps) => {
+    const [dialogOpen, setDialogOpen] = useState(false);
+
     const nodeStatus = "initial";
-    const handleOpenSettings = () => setDialogOpen(true);   
+
+    const handleOpenSettings = () => {
+        setDialogOpen(true);
+    };
+
     return (
         <>
-            <GoogleFormTriggerDialog open={dialogOpen} onOpenchange={setDialogOpen} />
-            <BaseTriggerNode 
+            <GoogleFormTriggerDialog
+                open={dialogOpen}
+                onOpenchange={setDialogOpen}
+            />
+
+            <BaseTriggerNode
                 {...props}
                 icon="/logos/icons8-google-forms.svg"
                 name="Google Form"
@@ -20,5 +30,7 @@ export const GoogleFormTrigger = memo((props: NodeProps) => {
                 onDoubleClick={handleOpenSettings}
             />
         </>
-    )
-})
+    );
+});
+
+GoogleFormTriggerNode.displayName = "GoogleFormTriggerNode";

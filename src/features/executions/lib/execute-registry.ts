@@ -1,21 +1,27 @@
 import { NodeType } from "@prisma/client";
-import { NodeExecutor } from "../types";
-import { manualTriggerExecutor } from "@/features/triggers/components/manual-trigger/executor";
+
+import type { NodeExecutor } from "../types";
+
 import { httpRequestExecutor } from "../components/http-request/executor";
+
+import { OLLAMAExecutor } from "../components/ollama/executor";
+import { manualTriggerExecutor } from "@/features/triggers/components/manual-trigger/executor";
 import { googleFormTriggerExecutor } from "@/features/triggers/components/google-form-trigger/executor";
 
-export const executorRegistry: Record<NodeType, NodeExecutor> = {
-    [NodeType.HTTP_REQUEST]: httpRequestExecutor, // todo - this is temporary until we have a better way to handle executors that require channels
+type ExecutorRegistry = Partial<
+  Record<NodeType, NodeExecutor<any>>
+>;
+
+export const EXECUTOR_REGISTRY: ExecutorRegistry = {
+    [NodeType.HTTP_REQUEST]: httpRequestExecutor,
     [NodeType.INITIAL]: manualTriggerExecutor,
     [NodeType.MANUAL_TRIGGER]: manualTriggerExecutor,
     [NodeType.GOOGLE_FORM_TRIGGER]: googleFormTriggerExecutor,
+    [NodeType.OLLAMA]: OLLAMAExecutor,
 };
 
-export const getExecutor = (type: NodeType): NodeExecutor => {
-    const executor = executorRegistry[type];
-    if (!executor) {
-        throw new Error(`No executor found of node type: ${type}`);
-    }
-
-    return executor;
+export function getExecutor(
+  type: NodeType
+): NodeExecutor<any> | undefined {
+  return EXECUTOR_REGISTRY[type];
 }

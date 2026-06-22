@@ -1,14 +1,16 @@
 import { InitialNode } from "@/components/initial-node";
 import { HttpRequestNode } from "@/features/executions/components/http-request/node";
-import { GoogleFormTrigger } from "@/features/triggers/components/google-form-trigger/node";
+import { OLLAMANode } from "@/features/executions/components/ollama/node";
 import { ManualTriggerNode } from "@/features/triggers/components/manual-trigger/node";
+import { GoogleFormTriggerNode } from "@/features/triggers/components/google-form-trigger/node";
 import { NodeType } from "@prisma/client";
 import type { NodeTypes } from "@xyflow/react";
 export const nodeCompontes = {
     [NodeType.INITIAL]: InitialNode,
     [NodeType.HTTP_REQUEST]: HttpRequestNode,
     [NodeType.MANUAL_TRIGGER]: ManualTriggerNode,
-    [NodeType.GOOGLE_FORM_TRIGGER]: GoogleFormTrigger,
+    [NodeType.OLLAMA]: OLLAMANode,
+    [NodeType.GOOGLE_FORM_TRIGGER]: GoogleFormTriggerNode,
 } as const satisfies NodeTypes;
 
 export type RegisteredNodeType = keyof typeof nodeCompontes;
