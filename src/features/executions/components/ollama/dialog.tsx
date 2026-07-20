@@ -35,6 +35,9 @@ import { useForm } from "react-hook-form";
 import { useEffect } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import { useCredentialsByType } from "@/features/credentials/hooks/use-credentials";
+import { CredentialType } from "@prisma/client";
+import Image from "next/image";
 
 export const OLLAMA_MODELS = [
   "nvidia/nemotron-3-super-120b-a12b:free",
@@ -51,11 +54,9 @@ const formSchema = z.object({
       message:
         "Variable name must start with a letter or underscore and contain only letters, numbers, and underscores",
     }),
-
+  credentialId: z.string().min(1, "Credential is required"),
   model: z.enum(OLLAMA_MODELS),
-
   systemPrompt: z.string().optional(),
-
   userPrompt: z
     .string()
     .min(1, "User prompt is required"),
@@ -83,12 +84,17 @@ export const OLLAMADialog = ({
   onSubmit,
   defaultValues = {},
 }: Props) => {
+  const { 
+    data: credentials, isLoading: isLoadingCredentials,
+    } = useCredentialsByType(CredentialType.OPENROUTER);
+
   const form = useForm<
     z.infer<typeof formSchema>
   >({
     resolver: zodResolver(formSchema),
 
     defaultValues: {
+      credentialId: defaultValues.credentialId || "",
       variableName:
         defaultValues.variableName || "",
 
@@ -106,6 +112,7 @@ export const OLLAMADialog = ({
   useEffect(() => {
     if (open) {
       form.reset({
+        credentialId: defaultValues.credentialId || "",
         variableName:
           defaultValues.variableName || "",
 
@@ -180,13 +187,44 @@ export const OLLAMADialog = ({
                     {
                       `{{${watchVariableName}.text}}`
                     }
-                  </FormDescription>
-
+                  </FormDescription>                    
                   <FormMessage />
                 </FormItem>
               )}
             />
-
+            
+            <FormField 
+              control={form.control}
+              name="credentialId"
+              render={({ field }) => (
+              <FormItem>
+                <FormLabel>OPENROUTER Credential</FormLabel>
+                  <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value} 
+                      disabled={isLoadingCredentials || !credentials?.length} 
+                    >
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a Cedential" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {credentials?.map((credential) => (
+                        <SelectItem key={credential.id} value={credential.id}>
+                          <div className="flex items-center gap-2">
+                            <Image src="/logos/openrouter.svg" alt="OpenRouter" width={16} height={16} />
+                              {credential.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+                  )}
+              />
+            
             <FormField
               control={form.control}
               name="model"

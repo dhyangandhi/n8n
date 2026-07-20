@@ -20,6 +20,12 @@ import {
 } from "@xyflow/react";
 
 import { NodeType } from "@prisma/client";
+import { createContext } from "react";
+
+export const EditorContext = createContext<{
+  setNodes: React.Dispatch<React.SetStateAction<Node[]>>;
+  setEdges: React.Dispatch<React.SetStateAction<Edge[]>>;
+} | null>(null);
 
 export const WorkflowEditor = ({
   workflowId,
@@ -77,23 +83,25 @@ export const WorkflowEditor = ({
   }, [nodes]);
 
   return (
-    <div className="flex flex-col h-full">
-      <EditorHeader
-        workflowId={workflowId}
-        onSave={handleSave}
-        isSaving={updateWorkflow.isPending}
-      />
-      <main className="flex-1">
-        <Editor
+    <EditorContext.Provider value={{ setNodes, setEdges }}>
+      <div className="flex flex-col h-full">
+        <EditorHeader
           workflowId={workflowId}
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          hasManualTrigger={hasManualTrigger}
+          onSave={handleSave}
+          isSaving={updateWorkflow.isPending}
         />
-      </main>
-    </div>
+        <main className="flex-1">
+          <Editor
+            workflowId={workflowId}
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            hasManualTrigger={hasManualTrigger}
+          />
+        </main>
+      </div>
+    </EditorContext.Provider>
   );
 };

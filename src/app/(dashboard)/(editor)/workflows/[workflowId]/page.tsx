@@ -1,4 +1,4 @@
-import { prefetchWorkflow } from "@/features/workflow/server/prefetch";
+import { prefetchCredential } from "@/features/workflow/server/prefetch";
 import { requireAuth } from "@/lib/auth-utils";
 import { HydrateClient } from "@/trpc/server";
 import { ErrorBoundary } from "react-error-boundary";
@@ -17,7 +17,7 @@ const Page = async ({ params }: PageProps) => {
   await requireAuth();
   // 2. Await the params before using them
   const { workflowId } = await params;
-  prefetchWorkflow(workflowId);
+  prefetchCredential(workflowId);
   // 3. Now you can safely display the ID!
   return (
     <HydrateClient>

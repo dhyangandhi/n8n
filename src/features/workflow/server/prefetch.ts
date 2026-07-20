@@ -1,14 +1,13 @@
 import type { inferInput } from "@trpc/tanstack-react-query";
 import { prefetch, trpc } from "@/trpc/server";
-import { tr } from "date-fns/locale";
 
+// Infer the expected input type directly from your tRPC router
 type Input = inferInput<typeof trpc.workflows.getMany>;
 
-
-export const prefetchWorkflows = (params: Input) => {
+export const prefetchCredentials = (params: Input) => {
     return prefetch(trpc.workflows.getMany.queryOptions(params));
 }
 
-export const prefetchWorkflow = (id: string) => {
+export const prefetchCredential = (id: string) => {
     return prefetch(trpc.workflows.getOne.queryOptions({ id }));
 }

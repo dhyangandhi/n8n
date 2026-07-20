@@ -7,7 +7,8 @@ import {
 } from "@xyflow/react";
 
 import { GlobeIcon } from "lucide-react";
-import { memo, useState } from "react";
+import { memo, useState, useContext } from "react";
+import { EditorContext } from "@/features/editor/components/workflow-editor";
 
 import { BaseExecutionNode } from "../base-exection-node";
 import { HTTPRequestFormValues, HTTPRequestDialog } from "./dialog";
@@ -27,7 +28,8 @@ type HTTPRequestNodeType = Node<HttpRequestNodeData>;
 export const HttpRequestNode = memo(
   (props: NodeProps<HTTPRequestNodeType>) => {
     const [dialogOpen, setDialogOpen] = useState(false);
-    const { setNodes } = useReactFlow();
+    const editorCtx = useContext(EditorContext);
+    const setNodes = editorCtx ? editorCtx.setNodes : useReactFlow().setNodes;
     const nodeData = props.data;
     const nodeStatus = useNodeStatus({
       nodeId: props.id,

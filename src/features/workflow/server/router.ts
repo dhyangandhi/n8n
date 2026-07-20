@@ -85,6 +85,10 @@ import { sendworkflowExecution } from "@/inngest/utils";
                 where: { id, userId: ctx.auth.user.id },
             })
             return await prisma.$transaction(async (tx) => {
+                await tx.connection.deleteMany({
+                    where: { workflowId: id },
+                });
+
                 await tx.node.deleteMany({
                     where: { workflowId: id },
                 });

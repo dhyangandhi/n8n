@@ -6,7 +6,8 @@ import {
   type NodeProps,
 } from "@xyflow/react";
 
-import { memo, useState } from "react";
+import { memo, useState, useContext } from "react";
+import { EditorContext } from "@/features/editor/components/workflow-editor";
 
 import { BaseExecutionNode } from "../base-exection-node";
 import { OLLAMA_MODELS, OLLAMADialog, OLLAMAFormValues } from "./dialog";
@@ -27,7 +28,8 @@ type GeminiNodeType = Node<OLLamaNodeData>;
 export const OLLAMANode = memo(
   (props: NodeProps<GeminiNodeType>) => {
     const [dialogOpen, setDialogOpen] = useState(false);
-    const { setNodes } = useReactFlow();
+    const editorCtx = useContext(EditorContext);
+    const setNodes = editorCtx ? editorCtx.setNodes : useReactFlow().setNodes;
     const nodeData = props.data;
     const nodeStatus = useNodeStatus({
       nodeId: props.id,

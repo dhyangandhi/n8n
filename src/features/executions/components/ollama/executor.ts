@@ -4,6 +4,8 @@ import type { NodeExecutor } from "@/features/executions/types";
 import * as Handlebars from "handlebars";
 import { createOpenAI } from "@ai-sdk/openai";
 import { generateText } from "ai";
+import { NonRetriableError } from "inngest";
+import prisma from "@/lib/db";
 
 Handlebars.registerHelper("json", (context) => {
   return new Handlebars.SafeString(
@@ -13,6 +15,7 @@ Handlebars.registerHelper("json", (context) => {
 
 type OLLAMAData = {
   variableName: string;
+  credentialId: string;
   model?: string;
   systemPrompt?: string;
   userPrompt?: string;
@@ -24,6 +27,29 @@ export const OLLAMAExecutor: NodeExecutor<OLLAMAData> = async ({
   context,
   step,
 }) => {
+  if (!data.credentialId) {
+    throw new NonRetriableError(
+      "OPENROUTER node: Credential is required"
+    );
+  }
+
+  const credential = await step.run(
+    `credential_${data.credentialId}`,
+    async () => {
+      return prisma.credential.findUnique({
+        where: {
+          id: data.credentialId,
+        },
+      });
+    }
+  );
+
+  if (!credential) {
+    throw new NonRetriableError(
+      "OPENROUTER node: Credential not found"
+    );
+  }
+
   const systemPrompt = data.systemPrompt
     ? Handlebars.compile(data.systemPrompt)(context)
     : "You are a helpful AI assistant.";
@@ -33,9 +59,9 @@ export const OLLAMAExecutor: NodeExecutor<OLLAMAData> = async ({
     : "";
 
   const openrouter = createOpenAI({
-    apiKey: process.env.OPENROUTER_API_KEY,
+    apiKey: credential.value,
     baseURL:
-      process.env.OPENROUTER_BASE_URL ||
+      process.env.OPENROUTER_BASE_URL ??
       "https://openrouter.ai/api/v1",
   });
 
@@ -43,13 +69,15 @@ export const OLLAMAExecutor: NodeExecutor<OLLAMAData> = async ({
     const result = await step.run(
       `openrouter_${nodeId}`,
       async () => {
-        console.log("SYSTEM:", systemPrompt);
-        console.log("PROMPT:", userPrompt);
+        console.log("Credential:", credential.name);
+        console.log("Model:", data.model);
+        console.log("System:", systemPrompt);
+        console.log("Prompt:", userPrompt);
 
         const response = await generateText({
           model: openrouter(
-            data.model ||
-            "nvidia/llama-3.1-nemotron-ultra-253b-v1:free"
+            data.model ??
+              "nvidia/llama-3.1-nemotron-ultra-253b-v1:free"
           ),
           system: systemPrompt,
           prompt: userPrompt,
@@ -62,17 +90,17 @@ export const OLLAMAExecutor: NodeExecutor<OLLAMAData> = async ({
     return {
       ...context,
       [data.variableName]: {
+        text: result,
         aiResponse: result,
       },
     };
-  } catch (error) {
-    console.error("OPENROUTER ERROR:", error);
+  } catch (err) {
+    console.error("OPENROUTER ERROR:", err);
 
-    return {
-      ...context,
-      [data.variableName]: {
-        aiResponse: "Failed to generate response.",
-      },
-    };
+    throw new NonRetriableError(
+      err instanceof Error
+        ? err.message
+        : "Failed to generate response."
+    );
   }
 };
