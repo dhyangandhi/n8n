@@ -1,5 +1,6 @@
 import { createLoader } from "nuqs/server";
 import { credentialsParams } from "../params";
 
-export const credentialsParmsLoader = createLoader(credentialsParams);
+export const credentialsParamsLoader = createLoader(credentialsParams);
+export const credentialsParmsLoader = credentialsParamsLoader;
 

@@ -1,6 +1,6 @@
 import { WorkflowError, WorkflowLoading, WorkflowsContainer, WorkflowsList } from "@/features/workflow/components/workflow";
 import { workflowParamsLoader } from "@/features/workflow/server/params";
-import { prefetchCredentials } from "@/features/workflow/server/prefetch";
+import { prefetchWorkflows } from "@/features/workflow/server/prefetch";
 import { requireAuth } from "@/lib/auth-utils";
 import { HydrateClient } from "@/trpc/server";
 import type { SearchParams } from "nuqs/server";
@@ -13,7 +13,7 @@ type Props = {
 const Page = async ({ searchParams }: Props) => {
     await requireAuth();
     const params = await workflowParamsLoader(searchParams);
-    prefetchCredentials(params);
+    prefetchWorkflows(params);
 
     return (
         <WorkflowsContainer>
