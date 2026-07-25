@@ -18,7 +18,7 @@ model User {
   workflow      Workflow[]
   accounts      Account[]
   sessions      Session[]
-  certials   Credential[]
+  credentials   Credential[]
 
   @@map("user")
 }
@@ -93,6 +93,7 @@ model Workflow {
   name        String
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
+  executions  Execution[]
   userId      String
   connections Connection[]
   nodes       Node[]
@@ -145,4 +146,29 @@ enum NodeType {
   HTTP_REQUEST
   GOOGLE_FORM_TRIGGER
   OLLAMA
+}
+
+model Execution {
+  id String @id @default(cuid())
+
+  workflowId String
+
+  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  startedAt DateTime @default(now())
+  error String? @db.Text
+  errorStack String? @db.Text
+
+  completedAt DateTime?
+
+  status ExecutionStatus @default(RUNNING)
+  inngestEventId String @unique
+
+  output Json?
+}
+
+enum ExecutionStatus {
+  RUNNING
+  SUCCESS
+  FAILED
 }

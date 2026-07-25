@@ -3,7 +3,7 @@ import { inngest } from "./client";
 
 import prisma from "@/lib/db";
 
-import { NodeType } from "@prisma/client";
+import { ExecutionStatus, NodeType } from "@prisma/client";
 
 import { getExecutor } from "@/features/executions/lib/execute-registry";
 import { topologicalSort } from "./utils";
@@ -28,10 +28,48 @@ export const executeWorkflow = inngest.createFunction(
         ],
       },
     ],
+    onFailure: async ({ event }) => {
+      const inngestEventId = event.data.event?.id || event.data.event?.data?.inngestEventId;
+      const workflowId = event.data.event?.data?.workflowId;
+
+      if (inngestEventId && workflowId) {
+        await prisma.execution.upsert({
+          where: {
+            inngestEventId,
+          },
+          create: {
+            inngestEventId,
+            workflowId,
+            status: ExecutionStatus.FAILED,
+            error: event.data.error.message,
+            errorStack: event.data.error.stack,
+            completedAt: new Date(),
+          },
+          update: {
+            status: ExecutionStatus.FAILED,
+            error: event.data.error.message,
+            errorStack: event.data.error.stack,
+            completedAt: new Date(),
+          },
+        });
+      } else if (inngestEventId) {
+        await prisma.execution.updateMany({
+          where: {
+            inngestEventId,
+          },
+          data: {
+            status: ExecutionStatus.FAILED,
+            error: event.data.error.message,
+            errorStack: event.data.error.stack,
+            completedAt: new Date(),
+          },
+        });
+      }
+    },
   },
   async ({ event, step }) => {
     console.log("🚀 FUNCTION STARTED:", event.data);
-
+    const inngestEventId = event.id;
     const data = event.data as {
       workflowId: string;
       initialData?: Record<string, unknown>;
@@ -39,9 +77,19 @@ export const executeWorkflow = inngest.createFunction(
 
     const workflowId = data.workflowId;
 
-    if (!workflowId) {
-      throw new NonRetriableError("Workflow ID is missing");
+    if (!inngestEventId || !workflowId) {
+      throw new NonRetriableError("Event Id or Workflow ID is missing");
     }
+
+    await step.run("create-execution", async () => {
+      return prisma.execution.create({
+        data: {
+          inngestEventId,
+          workflowId,
+          status: ExecutionStatus.RUNNING,
+        },
+      });
+    });
 
     const sortedNodes = await step.run(
       "prepare-workflow",
@@ -126,6 +174,18 @@ export const executeWorkflow = inngest.createFunction(
       }
     }
 
+    await step.run("update-execution", async () => {
+      return prisma.execution.update({
+        where: {
+          inngestEventId,
+        },
+        data: {
+          status: ExecutionStatus.SUCCESS,
+          completedAt: new Date(),
+          output: context as any,
+        },
+      });
+    });
     console.log("🎉 WORKFLOW COMPLETED");
 
     return {

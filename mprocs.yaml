@@ -1,6 +1,8 @@
 procs:
   inngest:
-    cmd: ["npm", "run", "inngest:dev"]
+    cmd: ["cmd.exe", "/c", "npm run inngest:dev"]
+    autostart: true
 
   next:
-    cmd: ["npm", "run", "dev"]
+    cmd: ["cmd.exe", "/c", "npm run dev"]
+    autostart: true

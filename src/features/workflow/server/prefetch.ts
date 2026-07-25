@@ -4,10 +4,10 @@ import { prefetch, trpc } from "@/trpc/server";
 // Infer the expected input type directly from your tRPC router
 type Input = inferInput<typeof trpc.workflows.getMany>;
 
-export const prefetchCredentials = (params: Input) => {
+export const prefetchWorkflows = (params: Input) => {
     return prefetch(trpc.workflows.getMany.queryOptions(params));
 }
 
-export const prefetchCredential = (id: string) => {
+export const prefetchWorkflow = (id: string) => {
     return prefetch(trpc.workflows.getOne.queryOptions({ id }));
 }

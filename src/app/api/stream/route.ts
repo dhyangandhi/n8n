@@ -1,10 +1,11 @@
-// /app/api/stream/route.ts
-
 let clients: ReadableStreamDefaultController[] = [];
 
 export async function GET() {
+  let currentController: ReadableStreamDefaultController;
+
   const stream = new ReadableStream({
     start(controller) {
+      currentController = controller;
       clients.push(controller);
 
       console.log("✅ Client connected");
@@ -12,7 +13,7 @@ export async function GET() {
       controller.enqueue(`data: ${JSON.stringify({ status: "connected" })}\n\n`);
     },
     cancel() {
-      clients = clients.filter((c) => c !== controller);
+      clients = clients.filter((c) => c !== currentController);
       console.log("❌ Client disconnected");
     },
   });
