@@ -47,6 +47,31 @@ export function LoginForm() {
     },
   });
 
+  const signInGithub = async () => {
+    await authClient.signIn.social({
+      provider: "github",
+    }, {
+      onSuccess: () => {
+        router.push("/");
+      },
+      onError: () => {
+        toast.error("Something went wrong;");
+      },
+    });
+  };
+
+  const signInGoogle = async () => {
+    await authClient.signIn.social({
+      provider: "google",
+    }, {
+      onSuccess: () => {
+        router.push("/");
+      },
+      onError: () => {
+        toast.error("Something went wrong;");
+      },
+    });
+  };
   const onSubmit = async (values: LoginFormValues) => {
     try {
       await authClient.signIn.email(
@@ -94,6 +119,7 @@ export function LoginForm() {
               {/* Social buttons */}
               <div className="flex flex-col gap-3 mb-2">
                 <Button
+                  onClick={signInGithub}
                   variant="outline"
                   className="w-full rounded-lg py-2 flex items-center justify-center gap-2 hover:bg-gray-50"
                   disabled={isPending}
@@ -103,6 +129,7 @@ export function LoginForm() {
                 </Button>
 
                 <Button
+                  onClick={signInGoogle}
                   variant="outline"
                   className="w-full rounded-lg py-2 flex items-center justify-center gap-2 hover:bg-gray-50"
                   disabled={isPending}

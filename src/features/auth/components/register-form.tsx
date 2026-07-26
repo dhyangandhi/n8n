@@ -57,6 +57,32 @@ export function RegisterForm() {
     },
   });
 
+  const signInGithub = async () => {
+      await authClient.signIn.social({
+        provider: "github",
+      }, {
+        onSuccess: () => {
+          router.push("/");
+        },
+        onError: () => {
+          toast.error("Something went wrong;");
+        },
+      });
+    };
+  
+    const signInGoogle = async () => {
+      await authClient.signIn.social({
+        provider: "google",
+      }, {
+        onSuccess: () => {
+          router.push("/");
+        },
+        onError: () => {
+          toast.error("Something went wrong;");
+        },
+      });
+    };
+
   const isPending = form.formState.isSubmitting;
   
   const onSubmit = async (values: RegisterFormValues) => {
@@ -96,11 +122,11 @@ export function RegisterForm() {
             >
               {/* Social Buttons */}
               <div className="flex flex-col gap-3">
-                <Button variant="outline" disabled={isPending}>
+                <Button  onClick={signInGoogle} variant="outline" disabled={isPending}>
                   <Image alt="Google" src="/logos/icons8-google.svg" width={20} height={20} />
                   Continue with Google
                 </Button>
-                <Button variant="outline" disabled={isPending}>
+                <Button onClick={signInGithub} variant="outline" disabled={isPending}>
                   <Image alt="GitHub" src="/logos/icons8-github.svg" width={20} height={20} />
                   Continue with GitHub
                 </Button>
