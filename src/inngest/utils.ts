@@ -1,5 +1,5 @@
 import { Connection, Node } from "@prisma/client";
-import topsort from "topsort";
+import toposort from "toposort";
 import { inngest } from "./client";
 import { createId } from "@paralleldrive/cuid2";
 
@@ -33,7 +33,7 @@ export const topologicalSort = (
     let sortedNodeIds: string[];
 
     try {
-        sortedNodeIds = topsort(edges);
+        sortedNodeIds = toposort(edges);
         sortedNodeIds = [...new Set(sortedNodeIds)]
     } catch (error) {
         if (error instanceof Error && error.message.includes("Cyclic")) {

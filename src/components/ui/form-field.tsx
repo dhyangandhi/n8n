@@ -11,7 +11,7 @@ export interface FormFieldContextValue {
   formItemId?: string
   formDescriptionId?: string
   formMessageId?: string
-  error?: unknown
+  error?: any
 }
 
 interface FormFieldContextProviderProps {

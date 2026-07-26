@@ -49,7 +49,7 @@ export const protectedProcedure = baseProcedure.use(async ({ ctx, next }) => {
 
 export const premiumProcedure = protectedProcedure.use(
   async ({ ctx, next }) => {
-    let customer = null;
+    let customer: any = null;
 
     try {
       customer = await polarClient.customers.getStateExternal({
